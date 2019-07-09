@@ -51,20 +51,13 @@ defmodule Arc.Storage.S3 do
 
   # Stream the file and upload to AWS as a multi-part upload
   defp do_put(file, {s3_bucket, s3_key, s3_options}) do
-    file.path
-    |> ExAws.S3.Upload.stream_file()
-    |> ExAws.S3.upload(s3_bucket, s3_key, s3_options)
+    ExAws.S3.put_object(s3_bucket, s3_key, File.read!(file.path))
     |> ExAws.request()
     |> case do
       {:ok, %{status_code: 200}} -> {:ok, file.file_name}
       {:ok, :done} -> {:ok, file.file_name}
       {:error, error} -> {:error, error}
     end
-  rescue
-    e in ExAws.Error ->
-      Logger.error(inspect e)
-      Logger.error(e.message)
-      {:error, :invalid_bucket}
   end
 
   defp build_url(definition, version, file_and_scope, _options) do
